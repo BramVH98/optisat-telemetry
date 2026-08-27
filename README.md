@@ -73,7 +73,7 @@ Similarly, the `sun_sensor_raw` field shows repeated periods of zero followed by
 
 ## Status
 
-**Working decoder — further protocol reverse engineering ongoing.**
+**Working decoder: further protocol reverse engineering ongoing.**
 
 The decoder is intended to eventually be contributed to the SatNOGS decoder collection once the format and documentation have been reviewed.
 
