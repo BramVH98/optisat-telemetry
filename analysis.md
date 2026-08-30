@@ -1,4 +1,4 @@
-# OPTISAT Telemetry Decoder — Reverse Engineering Analysis
+# OPTISAT Telemetry Decoder - Reverse Engineering Analysis
 
 ## Target
 
@@ -6,7 +6,7 @@
 
 ## Starting point
 
-Raw frames were pulled via SatNOGS's Data Export feature (`db.satnogs.org`), which provides hex-encoded frames already demodulated at the RF layer by SatNOGS's own receiver pipeline. This meant no SDR/demodulation work was required — the task was purely to determine the structure of the bytes SatNOGS had already captured.
+Raw frames were pulled via SatNOGS's Data Export feature (`db.satnogs.org`), which provides hex-encoded frames already demodulated at the RF layer by SatNOGS's own receiver pipeline. This meant no SDR/demodulation work was required - the task was purely to determine the structure of the bytes SatNOGS had already captured.
 
 ## Framing discovery
 
@@ -29,9 +29,9 @@ A byte immediately after the AX.25 header distinguishes three payload types:
 
 | Value  |   Length | Content                                                                                                                 |
 | ------ | -------: | ----------------------------------------------------------------------------------------------------------------------- |
-| `0x80` | 13 bytes | Identity beacon — payload spells `Endurosat`, confirming the satellite's UHF transceiver is a standard EnduroSat module |
-| `0x83` | 48 bytes | Sparse/mostly-zero frame — likely a status or ping beacon                                                               |
-| `0x33` | 63 bytes | Full telemetry frame — the primary subject of this analysis                                                             |
+| `0x80` | 13 bytes | Identity beacon - payload spells `Endurosat`, confirming the satellite's UHF transceiver is a standard EnduroSat module |
+| `0x83` | 48 bytes | Sparse/mostly-zero frame - likely a status or ping beacon                                                               |
+| `0x33` | 63 bytes | Full telemetry frame - the primary subject of this analysis                                                             |
 
 The `0x33` frame is the only one carrying meaningful, varying telemetry data.
 
@@ -46,15 +46,15 @@ For the `0x33` telemetry frames, every byte position was analyzed across the ful
 
 Fields were only assigned a descriptive name (e.g. `temp_1_raw`) when they met **both** of two bars: a physically plausible value range, and either a direct definitional match (voltage/current, which the frame explicitly carries) or strong correlation (>0.9) with an already-confirmed field.
 
-Fields meeting only one criterion, or supported by indirect/behavioral reasoning alone, are left named `unknown_*` with the hypothesis documented in a comment — see the confidence table below.
+Fields meeting only one criterion, or supported by indirect/behavioral reasoning alone, are left named `unknown_*` with the hypothesis documented in a comment - see the confidence table below.
 
 ## Validation
 
 Two independent checks were used, deliberately without relying on any official specification (none exists publicly for this satellite):
 
-1. **Twin-beacon consistency.** Multiple frames were captured only seconds apart (the satellite beacons more than once per pass). Decoded values for these near-duplicate timestamps are consistently near-identical — the fingerprint of genuine telemetry, not noise, which would not reproduce consistently at that timescale.
+1. **Twin-beacon consistency.** Multiple frames were captured only seconds apart (the satellite beacons more than once per pass). Decoded values for these near-duplicate timestamps are consistently near-identical - the fingerprint of genuine telemetry, not noise, which would not reproduce consistently at that timescale.
 
-2. **Full-dataset parse validation.** The finished decoder was run against **3,228 real telemetry frames spanning roughly four months** (mid-April to late August 2026), collected by dozens of independent ground stations. **All 3,228 frames parsed without error**, and every confirmed field (voltage, current, three temperature channels) stayed within physically plausible bounds across the entire run — including real seasonal temperature range shifts between the earlier and later parts of the dataset.
+2. **Full-dataset parse validation.** The finished decoder was run against **3,228 real telemetry frames spanning roughly four months** (mid-April to late August 2026), collected by dozens of independent ground stations. **All 3,228 frames parsed without error**, and every confirmed field (voltage, current, three temperature channels) stayed within physically plausible bounds across the entire run - including real seasonal temperature range shifts between the earlier and later parts of the dataset.
 
 ## Field confidence table
 
@@ -69,17 +69,17 @@ Two independent checks were used, deliberately without relying on any official s
 | `temp_1_raw`                         | Medium–high         | Physically plausible range; anchors the correlation analysis for temp_2/3                                                                            |
 | `temp_2_raw`                         | Medium–high         | corr = 0.97 with temp_1                                                                                                                              |
 | `temp_3_raw`                         | Medium–high         | corr = 0.94 with temp_1                                                                                                                              |
-| `unknown_g1` (sun sensor hypothesis) | Low–medium          | Mostly zero with intermittent spikes, consistent with an eclipse/sunlight pattern — but this is behavioral inference, not a direct measurement match |
-| `unknown_a1, a2, f1`                 | Low                 | Weak correlation with temp_1 only — not sufficient to name                                                                                           |
+| `unknown_g1` (sun sensor hypothesis) | Low–medium          | Mostly zero with intermittent spikes, consistent with an eclipse/sunlight pattern - but this is behavioral inference, not a direct measurement match |
+| `unknown_a1, a2, f1`                 | Low                 | Weak correlation with temp_1 only - not sufficient to name                                                                                           |
 | `unknown_h1, i1`                     | None                | Two-valued bytes with no behavioral evidence for what they represent                                                                                 |
 | `padding_1–3, padding_end`           | High (structural)   | Constant zero across all samples                                                                                                                     |
 | All other `unknown_*` fields         | None                | No pattern identified beyond position                                                                                                                |
 
 ## Open questions
 
-* What do `reserved_block_1–4` actually encode? Their spacing (`0x59`, `0x5B`, `0x5D` — each 2 apart) suggests a channel/parameter ID scheme, but this is unconfirmed.
+* What do `reserved_block_1–4` actually encode? Their spacing (`0x59`, `0x5B`, `0x5D` - each 2 apart) suggests a channel/parameter ID scheme, but this is unconfirmed.
 * Why does the second `0x3E`-tagged sub-block contain one extra byte (`unknown_e2`) relative to the first? Structural asymmetry with no known cause.
 * Is `unknown_g1` genuinely a sun sensor? The eclipse/sunlight-consistent pattern is suggestive but not verified against any independent light or attitude data.
 * What do the two-valued `unknown_h1` / `unknown_i1` bytes represent?
 
-Contributions, corrections, or access to official EnduroSat/OPTISAT telemetry documentation are welcome — see the repository's issues.
+Contributions, corrections, or access to official EnduroSat/OPTISAT telemetry documentation are welcome - see the repository's issues.
